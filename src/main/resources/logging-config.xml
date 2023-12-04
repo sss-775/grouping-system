@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="60 seconds" debug="false">
+
+    <!-- 异步日志提取调用者数据标识 true/false -->
+    <property name="includeCallerData" value="true"/>
+    <!-- 异步日志的队列容量 -->
+    <property name="queueSize" value="256"/>
+    <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符 -->
+    <property name="LOG_PATTERN" value="[%X{trace_uuid}] %d{yyyy-MM-dd HH:mm:ss.SSS,CTT} [%-5level] [%thread] [%c][%M][%L] - %msg%n"/>
+
+    <!-- 彩色日志 -->
+    <!-- 彩色日志依赖的渲染类 -->
+    <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter"/>
+    <conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter"/>
+    <conversionRule conversionWord="wEx" converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter"/>
+    <!-- 彩色日志格式 -->
+    <property name="CONSOLE_LOG_PATTERN" value="[%X{trace_uuid}] ${CONSOLE_LOG_PATTERN:-%clr(%d{yyyy-MM-dd HH:mm:ss.SSS,CTT}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%thread]){faint} %clr(%-40.40logger{39}){cyan} %L %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}"/>
+
+    <contextName>logback-demo</contextName>
+    <!--输出到控制台 ConsoleAppender-->
+    <!-- 控制台输出 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </layout>
+    </appender>
+    <appender name="CONSOLE-ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>${queueSize}</queueSize>
+        <includeCallerData>${includeCallerData}</includeCallerData>
+        <appender-ref ref="CONSOLE"/>
+    </appender>
+
+    <property name="logback.logdir" value="logs/api"/>
+    <property name="logback.appname" value="shb-back"/>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!--如果只是想要 Info 级别的日志，只是过滤 info 还是会输出 Error 日志，因为 Error 的级别高，
+        所以我们使用下面的策略，可以避免输出 Error 的日志-->
+        <!--        <filter class="ch.qos.logback.classic.filter.LevelFilter">-->
+        <!--            &lt;!&ndash;过滤 Error&ndash;&gt;-->
+        <!--            <level>ERROR</level>-->
+        <!--            &lt;!&ndash;匹配到就禁止&ndash;&gt;-->
+        <!--            <onMatch>DENY</onMatch>-->
+        <!--            &lt;!&ndash;没有匹配到就允许&ndash;&gt;-->
+        <!--            <onMismatch>ACCEPT</onMismatch>-->
+        <!--        </filter>-->
+        <!--日志名称，如果没有File 属性，那么只会使用FileNamePattern的文件路径规则
+        如果同时有<File>和<FileNamePattern>，那么当天日志是<File>，明天会自动把今天
+        的日志改名为今天的日期。即，<File> 的日志都是当天的。
+        -->
+        <File>${logback.logdir}/info.${logback.appname}.log</File>
+        <!--滚动策略，按照时间滚动 TimeBasedRollingPolicy-->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!--文件路径,定义了日志的切分方式——把每一天的日志归档到一个文件中,以防止日志填满整个磁盘空间-->
+            <FileNamePattern>${logback.logdir}/info.${logback.appname}.%d{yyyy-MM-dd}.log</FileNamePattern>
+            <!--只保留最近90天的日志-->
+            <maxHistory>90</maxHistory>
+            <!--用来指定日志文件的上限大小，那么到了这个值，就会删除旧的日志-->
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <!--日志输出编码格式化-->
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+    <appender name="FILE-ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- 不丢失日志.默认的,如果队列的80%已满,则会丢弃TRACT、DEBUG、INFO级别的日志 -->
+        <discardingThreshold>0</discardingThreshold>
+        <!-- 更改默认的队列的深度,该值会影响性能.默认值为256 -->
+        <queueSize>${queueSize}</queueSize>
+        <includeCallerData>${includeCallerData}</includeCallerData>
+        <appender-ref ref="FILE"/>
+    </appender>
+
+<!--    &lt;!&ndash;指定最基础的日志输出级别&ndash;&gt;-->
+<!--    <root level="INFO">-->
+<!--        &lt;!&ndash;appender将会添加到这个loger&ndash;&gt;-->
+<!--        <appender-ref ref="CONSOLE-ASYNC"/>-->
+<!--        <appender-ref ref="FILE-"/>-->
+<!--    </root>-->
+
+    <!-- spring 多环境部署可以分别使用-->
+    <springProfile name="test,dev,pre">
+        <logger name="org.springframework" level="INFO" additivity="false">
+            <appender-ref ref="CONSOLE-ASYNC"/>
+            <appender-ref ref="FILE-ASYNC"/>
+        </logger>
+        <logger name="o.springframework" level="INFO" additivity="false">
+            <appender-ref ref="CONSOLE-ASYNC"/>
+            <appender-ref ref="FILE-ASYNC"/>
+        </logger>
+        <logger name="java.sql" level="INFO" additivity="false">
+            <appender-ref ref="CONSOLE-ASYNC"/>
+            <appender-ref ref="FILE-ASYNC"/>
+        </logger>
+        <logger name="club.devhub" level="INFO" additivity="false">
+            <appender-ref ref="CONSOLE-ASYNC"/>
+            <appender-ref ref="FILE-ASYNC"/>
+        </logger>
+        <!-- 日志输出级别 -->
+        <root level="INFO">
+            <appender-ref ref="CONSOLE-ASYNC"/>
+            <appender-ref ref="FILE-ASYNC"/>
+        </root>
+    </springProfile>
+    <springProfile name="prod">
+        <logger name="org.springframework" level="WARN" additivity="false">
+            <appender-ref ref="FILE-ASYNC"/>
+        </logger>
+        <logger name="java.sql" level="INFO" additivity="false">
+            <appender-ref ref="FILE-ASYNC"/>
+        </logger>
+        <logger name="club.devhub" level="INFO" additivity="false">
+            <appender-ref ref="FILE-ASYNC"/>
+        </logger>
+        <!-- 日志输出级别 -->
+        <root level="INFO">
+            <appender-ref ref="FILE-ASYNC"/>
+        </root>
+    </springProfile>
+    
+</configuration>
