@@ -46,7 +46,7 @@ services:
 
   web:
     build: .
-    image: tlg_back:latest
+    image: grouping-system:latest
     # 指定启动后的容器名
     container_name: grouping-system
     ports:

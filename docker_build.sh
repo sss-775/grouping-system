@@ -10,9 +10,9 @@ mvn package
 echo "jar文件打包完成"
 
 #容器的名称
-container_name=shb_back
+container_name=grouping-system
 #镜像的名称
-name=shb_back
+name=grouping-system
 #判断是否容器存在
 docker ps -a | grep $container_name &> /dev/null
 #如果存在，关闭并删除该容器
