@@ -1,0 +1,29 @@
+server:
+  # 端口号
+  port: 8080
+  # 配置path路径，如localhost:1024/api/v1
+  servlet:
+    context-path: /api/v1
+
+spring:
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://tlg_db/tlg?characterEncoding=utf-8&useSSL=false
+    username: tlg
+    password: tlg2023
+    hikari:
+      connection-test-query: SELECT 1
+      connection-timeout: 60000
+      idle-timeout: 500000
+      max-lifetime: 540000
+      maximum-pool-size: 12
+      minimum-idle: 10
+      pool-name: GuliHikariPool
+  redis:
+    host: tlg_redis
+    port: 6379
+    password: tlg123
+
+logging:
+  config: classpath:/logging-config.xml

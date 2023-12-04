@@ -1,0 +1,31 @@
+mybatis-plus:
+  configuration:
+    log-impl:  org.apache.ibatis.logging.stdout.StdOutImpl
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: tm.mc.groupingsystem.entity
+
+spring:
+  profiles:
+    active: test
+  application:
+    name: grouping-system
+  main:
+    allow-circular-references: true
+  mvc:
+    # 让404也抛出异常
+    throw-exception-if-no-handler-found: true
+  web:
+    # 不要为我们工程中的资源文件建立映射(这两步主要是为了使不存在的url也可以抛出异常)
+    resources:
+      add-mappings: false
+  jackson:
+    #日期格式化
+    date-format: yyyy-MM-dd HH:mm:ss
+    # 设置时区，避免服务器时间问题
+    time-zone: GMT+8
+  jwt:
+    header: Authorization
+    # 密匙KEY:
+    base64Secret: f331fc07b150f2402fff2d0f1ac80c22
+    # 过期时间 单位秒，可根据需要设置，86400000为一天
+    tokenValidityInSeconds: 86400000

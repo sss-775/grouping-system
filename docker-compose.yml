@@ -1,0 +1,64 @@
+version: "3"
+
+networks: # 自定义网络(默认桥接), 不使用links通信
+  tlg_network:
+    driver: bridge
+
+services:
+  mysql:
+    image: mysql
+    container_name: tlg_db
+    networks:
+      - tlg_network
+    environment:
+      # 时区上海
+      TZ: Asia/Shanghai
+      # root 密码
+      MYSQL_ROOT_PASSWORD: tlg123
+      # 初始化数据库(后续的初始化sql会在这个库执行)
+      MYSQL_DATABASE: tlg
+      # 初始化用户(不能是root 会报错, 后续需要给新用户赋予权限)
+      MYSQL_USER: tlg
+      # 用户密码
+      MYSQL_PASSWORD: tlg2023
+      # 映射端口
+    volumes:
+      - /data/tlg/mysql/data:/var/lib/mysql:rw # 挂载数据库数据, 可读可写
+      - /data/tlg/mysql/conf/my.cnf:/etc/mysql/my.cnf # 挂载配置文件
+      - /data/tlg/mysql/init:/docker-entrypoint-initdb.d/ # 挂载数据初始化sql脚本
+    ports:
+      - "9001:3306" # 与配置文件保持一致
+    restart: always
+
+  ##redis配置
+  redis:
+    image: redis:latest
+    container_name: tlg_redis
+    networks:
+      - tlg_network
+    command: redis-server --appendonly yes --requirepass "tlg123"
+    ports:
+      - "9002:6379"
+    volumes:
+      ##数据目录，要确保先创建好
+      - /data/tlg/redis/data:/data
+    restart: always
+
+  web:
+    build: .
+    image: tlg_back:latest
+    # 指定启动后的容器名
+    container_name: grouping-system
+    ports:
+      - "9000:8080"
+    volumes:
+      - /data/tlg/grouping-system/logs:/logs
+    environment:
+      active: dev
+    networks:
+      - tlg_network
+    depends_on:
+      - mysql
+      - redis
+    restart: always
+
